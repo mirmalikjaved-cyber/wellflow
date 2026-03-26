@@ -627,7 +627,7 @@ async function boot() {
   userProfile.habit_level= meta.habit_level|| '';
 
   // If no first_name saved yet → show onboarding
-  if (!userProfile.first_name) {
+  if (!meta.onboarded) {
     document.getElementById('onboarding').style.display = 'flex';
   } else {
     launchApp();
