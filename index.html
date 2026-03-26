@@ -409,6 +409,27 @@
 
 </div>
 
+<!-- RESET PASSWORD FORM -->
+<div id="new-password-view" style="display:none;">
+  <div class="logo" style="margin-bottom:20px;">
+    <h1 style="font-size:22px;">Set new password</h1>
+    <p>Choose a new password for your account.</p>
+  </div>
+  <div class="alert" id="alert-newpw"></div>
+  <div class="field">
+    <label>New password</label>
+    <input type="password" id="new-password" placeholder="At least 8 characters">
+  </div>
+  <div class="field">
+    <label>Confirm password</label>
+    <input type="password" id="confirm-password" placeholder="Repeat your new password">
+  </div>
+  <button class="btn-primary" id="btn-newpw" onclick="handleNewPassword()">
+    Update password
+  </button>
+</div>
+  
+  
 <script>
 // ============================================================
 // SUPABASE CONFIG — Replace these with your actual values!
@@ -503,6 +524,36 @@ async function handleLogin() {
   }
 }
 
+
+function showResetPassword() {
+  document.getElementById('auth-view').style.display = 'none';
+  document.getElementById('reset-view').style.display = 'none';
+  document.getElementById('success-view').style.display = 'none';
+  document.getElementById('new-password-view').style.display = 'block';
+}
+
+async function handleNewPassword() {
+  const pw  = document.getElementById('new-password').value;
+  const pw2 = document.getElementById('confirm-password').value;
+  if (pw.length < 8) {
+    showAlert('Password must be at least 8 characters.', 'error', 'alert-newpw');
+    return;
+  }
+  if (pw !== pw2) {
+    showAlert('Passwords do not match.', 'error', 'alert-newpw');
+    return;
+  }
+  setLoading('btn-newpw', true, 'Update password');
+  const { error } = await sb.auth.updateUser({ password: pw });
+  setLoading('btn-newpw', false, 'Update password');
+  if (error) {
+    showAlert(error.message, 'error', 'alert-newpw');
+  } else {
+    showAlert('Password updated! Taking you to the app...', 'success', 'alert-newpw');
+    setTimeout(() => window.location.href = 'app.html', 1500);
+  }
+}
+  
 // SIGNUP
 async function handleSignup() {
   if (!checkConfig()) return;
@@ -579,6 +630,12 @@ document.addEventListener('keydown', e => {
 
 // Check if user is already logged in
 async function checkSession() {
+  // Check for password reset token in URL
+  const hash = window.location.hash;
+  if (hash && hash.includes('type=recovery')) {
+    showResetPassword();
+    return;
+  }
   if (!sb) return;
   const { data: { session } } = await sb.auth.getSession();
   if (session) window.location.href = 'app.html';
